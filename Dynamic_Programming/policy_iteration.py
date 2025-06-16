@@ -25,6 +25,7 @@ def policy_iteration(states,
                     for (s_next, r, prob) in transition_function(s, a)
                 )
                 delta = max(delta, abs(v - V[s]))
+                print(f'Evaluating policy... delta_{delta}')
             if delta < theta:
                 break
         eval_iterations += 1

@@ -48,7 +48,7 @@ def value_iteration(states, actions, transition_function,
         action_values = {}
         for action in actions[s]:
             action_values[action] = sum(
-                prob * (r + gamma + V[s_next])
+                prob * (r + gamma * V[s_next])
                 for (s_next, r, prob) in transition_function(s, action)
             )
         # Hacemos el argmax para saber cuál es la mejor opción para cada state

@@ -3,7 +3,7 @@ from collections import defaultdict
 
 def first_visit_mc_policy_evaluation(states: list,
                                      policy: dict,
-                                     generate_episode_fn: function,
+                                     generate_episode_fn,
                                      gamma = 0.99,
                                      num_episodes = 1000):
     """

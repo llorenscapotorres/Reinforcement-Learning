@@ -92,3 +92,60 @@ def every_visit_mc_policy_evaluation(states,
             V[state] = np.mean(Returns[state])
 
     return V
+
+def mc_control_es(states: list,
+                  actions: dict,
+                  generate_episode_es_fn,
+                  num_episodes=10000,
+                  gamma=1.0):
+    """
+    Monte Carlo Control with Exploring Starts (Incremental version)
+
+    Args:
+        states (list): all possible states
+        actions (dict): maps state -> list of possible actions
+        generate_episode_es_fn (function): returns an episode starting from a specific (s0, a0)
+        num_episodes (int): number of episodes
+        gamma (float): discount factor
+
+    Returns:
+        policy (dict): optimal policy found
+        Q (dict): optimal action-value function
+    """
+    
+    # Initialization
+    Q = defaultdict(float)
+    N = defaultdict(int) # counts of visitis per (s, a)
+    policy = {s: np.random.choice(actions[s]) for s in states if actions[s]}
+
+    for episode_idx in range(num_episodes):
+        # Exploring Starts: pick random s0 and a0 such that all pairs have prob > 0
+        s0_idx = np.random.randint(len(states))
+        s0 = states[s0_idx]
+        if not actions[s0]:
+            continue
+        a0 = np.random.choice(actions[s0])
+
+        # Generate episode starting from (s0, a0)
+        episode = generate_episode_es_fn(s0, a0, policy)
+
+        G = 0
+        seen_pairs = set()
+
+        # Traverse episode backward
+        for t in reversed(range(len(episode))):
+            s, a, r = episode[t]
+            G = gamma * G + r
+
+            if (s, a) not in seen_pairs:
+                seen_pairs.add((s, a))
+
+                # Incremental update
+                N[(s, a)] += 1
+                Q[(s, a)] += (G - Q[(s, a)]) / N[(s, a)]
+
+                # Policy improvement
+                if actions[s]: # no terminal state
+                    policy[s] = max(actions[s], key=lambda a_: Q[(s, a_)])
+    
+    return policy, Q

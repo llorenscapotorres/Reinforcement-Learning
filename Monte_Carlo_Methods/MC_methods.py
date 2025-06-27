@@ -121,7 +121,7 @@ def mc_control_es(states: list,
     Q = {}
     for s in states:
         Q[s] = {} # Creamos el diccionario interior para el state s
-        for a in actions[s]:
+        for a in ['hits', 'sticks']:
             Q[s][a] = 0.0 # Inicializamos con el valor Q(s, a) con 0.0
     # Inicializamos un nuevo diccionario de diccionarios Returns(s, a)
     returns = defaultdict(lambda: defaultdict(list))
@@ -130,7 +130,8 @@ def mc_control_es(states: list,
         # Inicializamos un conjunto para comprobar si ya hemos visitado el par (state, action)
         visited_state_action_pairs = set()
         # Elegimos de forma aleatoria el state y la action con la que vamos a iniciar el episodio
-        s0 = np.random.choice(states)
+        states_idx = np.random.choice(range(len(states)))
+        s0 = states[states_idx]
         a0 = np.random.choice(actions[s])
         # Generamos el episodio --> [(s0, a0, r1), (s1, a1, r2), ..., (sT-1, aT-1, rT)]
         episode = generate_episode_es_fn(s0, a0, policy)

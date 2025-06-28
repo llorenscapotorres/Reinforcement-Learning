@@ -121,7 +121,7 @@ def mc_control_es(states: list,
     Q = {}
     for s in states:
         Q[s] = {} # Creamos el diccionario interior para el state s
-        for a in ['hits', 'sticks']:
+        for a in actions[s]:
             Q[s][a] = 0.0 # Inicializamos con el valor Q(s, a) con 0.0
     # Inicializamos un nuevo diccionario de diccionarios Returns(s, a)
     returns = defaultdict(lambda: defaultdict(list))
@@ -153,4 +153,9 @@ def mc_control_es(states: list,
             # Hacemos la policy greedy respecto a este estado
             best_action = max(Q[state], key=Q[s].get)
             policy[state] = best_action
-    return Q, policy
+    # Construimos la policy óptima
+    optimal_policy = {}
+    for s in states:
+        best_action = max(Q[state], key=Q[s].get)
+        optimal_policy[s] = best_action
+    return Q, optimal_policy

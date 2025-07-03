@@ -231,3 +231,55 @@ def mc_control_on_policy_first_visit(states: list,
                     soft_policy[state][a] = 1 - epsilon + (epsilon / num_actions)
                 else:
                     soft_policy[state][a] = epsilon / num_actions
+
+def mc_policy_evaluation_off_policy_every_visit(states:list,
+                                                actions: dict,
+                                                target_policy: dict,
+                                                generate_episode_fn_behavior_policy,
+                                                gamma = 1.0,
+                                                num_episodes = 10000):
+    '''
+    Monte Carlo for policy evaluation build with an off-policy weighted importance-sampling incremental implementation every-visit method.
+
+    Args:
+        states (list): List of all possible states.
+        actions (dict): A dictionary mapping each state to the list of available actions.
+        target_policy (dict{dict}): A dictionary of diccionaries mapping each state to the probability of each possible action to take under the current policy.
+        generate_episode_fn_behavior_policy (function): takes a policy 'b' (behavior policy) and returns a list of tuples [(s0, a0, r1), (s1, a1, r2), ..., (sT-1, aT-1, rT)].
+        gamma (float): Discount factor.
+        num_episodes (int): Number of episodes to sample.
+
+    Returns:
+        Q (dict{dict}): Dictionary of diccionaries mapping each state-action pair to its estimated value.
+    '''
+    # Initialize Q (value function) and C (sum of weights) 
+    Q = defaultdict(lambda: defaultdict(int))
+    C = {}
+    for s in states:
+        C[s] = {}
+        for a in actions[s]:
+            C[s][a] = 0
+    # Loop for each episode
+    for _ in range(num_episodes):
+        # Create behavior policy - complete random - dictionary of dictionaries
+        behavior_policy = {}
+        for s in states:
+            n = len(actions[s])
+            probs = np.random.dirichlet(np.ones(n))
+            behavior_policy[s] = {a: p for a, p in zip(actions[s], probs)}
+        # Generate an episode
+        episode = generate_episode_fn_behavior_policy(b)
+        # Initialize G and W
+        G = 0
+        W = 1
+        for t in reversed(range(len(episode))):
+            state, action, reward = episode[t]
+            if W != 0:
+                G = gamma * G + reward
+                C[state][action] = C[state][action] + W
+                Q[state][action] = Q[state][action] + (W / C[state][action]) * (G - Q[state][action])
+                W = W * (target_policy[state][action] / behavior_policy[state][action])
+            else:
+                break
+    return Q
+

@@ -7,7 +7,7 @@ def first_visit_mc_policy_evaluation(states: list,
                                      gamma = 0.99,
                                      num_episodes = 1000):
     """
-    First-Visit Monte Carlo Policy Evaluation.
+    First-Visit Monte Carlo Policy Evaluation - Incremental Implementation.
     
     Args:
         states (list): List of all possible states.
@@ -24,8 +24,10 @@ def first_visit_mc_policy_evaluation(states: list,
     # Initialize the value function for all states to 0.0
     V = {s: 0.0 for s in states}
 
-    # initialize a list of returns for each state
-    Returns = defaultdict(list)
+    # Initialize a count for each state s
+    N = {}
+    for s in states:
+        N[s] = 0
 
     for episode_idx in range(num_episodes):
         # Generate an episoed: a list of (state, action, reward)
@@ -41,9 +43,8 @@ def first_visit_mc_policy_evaluation(states: list,
             G = gamma * G + reward # accumulate discounted return
 
             if state not in visited_states:
-                visited_states.add(state)
-                Returns[state].append(G)
-                V[state] = np.mean(Returns[state])
+                N[state] = N[state] + 1
+                V[state] = V[state] + (G - V[state]) / N[state]
     
     return V
 

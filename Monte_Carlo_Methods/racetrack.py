@@ -22,6 +22,8 @@ class RaceCarEnv:
         i0, j0 = pos
         di, dj = vel
         steps = max(abs(di), abs(dj))
+        if steps == 0:
+            return [pos]  # No hay movimiento, se queda donde está
         path = [(i0 + round(k * di / steps), j0 + round(k * dj / steps)) for k in range(1, steps + 1)]
         return path
     

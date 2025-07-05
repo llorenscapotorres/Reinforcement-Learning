@@ -328,12 +328,13 @@ def mc_control_off_policy_every_visit(states:list,
             # Update all values
             G = gamma * G + reward
             C[state][action] = C[state][action] + W
-            Q[state][action] = Q[state][action] + (W / C[state][action])[G - Q[state][action]]
+            Q[state][action] = Q[state][action] + (W / C[state][action]) * (G - Q[state][action])
             # Update target policy
             q_vals = Q[state]
             max_value = max(q_vals.values())
             best_actions = [a for a in q_vals if q_vals[a] == max_value]
-            best_action = np.random.choice(best_actions)
+            random_idx = np.random.randint(0, len(best_actions))
+            best_action = best_actions[random_idx]
             target_policy[state] = best_action
             # If target policy and behavior policy diverges
             if action != target_policy[state]:

@@ -283,3 +283,60 @@ def mc_policy_evaluation_off_policy_every_visit(states:list,
                 break
     return Q
 
+def mc_control_off_policy_every_visit(states:list,
+                                    actions: dict,
+                                    generate_episode_fn_behavior_policy,
+                                    gamma = 1.0,
+                                    num_episodes = 10000):
+    '''
+    Monte Carlo for Control (estimating optimal policy) build with an off-policy weighted importance-sampling incremental implementation every-visit method.
+
+    Args:
+        states (list): List of all possible states.
+        actions (dict): A dictionary mapping each state to the list of available actions.
+        generate_episode_fn_behavior_policy (function): takes a policy 'b' (behavior policy) and returns a list of tuples [(s0, a0, r1), (s1, a1, r2), ..., (sT-1, aT-1, rT)].
+        gamma (float): Discount factor.
+        num_episodes (int): Number of episodes to sample.
+
+    Returns:
+        Q (dict{dict}): Dictionary of diccionaries mapping each state-action pair to its estimated value.
+        target_policy (dict): A deterministic policy, mapping each state to an action.
+    '''
+    # Initialize the value-function Q, C and target policy.
+    Q = defaultdict(lambda: defaultdict(int))
+    C = {}
+    target_policy = {}
+    for s in states:
+        C[s] = {}
+        for a in actions[s]:
+            C[s][a] = 0
+    # Loop for each episode
+    for _ in range(num_episodes):
+        # Create behavior policy - diccionary of diccionaries
+        behavior_policy = {}
+        for s in states:
+            n = len(actions[s])
+            probs = np.random.dirichlet(np.ones(n))
+            behavior_policy[s] = {a: p for a, p in zip(actions[s], probs)}
+        # Generate en episode
+        episode = generate_episode_fn_behavior_policy(behavior_policy)
+        # Initialize G and W
+        G = 0
+        W = 1
+        for t in reversed(range(len(episode))):
+            action, state, reward = episode[t]
+            # Update all values
+            G = gamma * G + reward
+            C[state][action] = C[state][action] + W
+            Q[state][action] = Q[state][action] + (W / C[state][action])[G - Q[state][action]]
+            # Update target policy
+            q_vals = Q[state]
+            max_value = max(q_vals.values())
+            best_actions = [a for a in q_vals if q_vals[a] == max_value]
+            best_action = np.random.choice(best_actions)
+            target_policy[state] = best_action
+            # If target policy and behavior policy diverges
+            if action != target_policy[state]:
+                break
+            W = W * (1 / behavior_policy[state][action])
+    return Q, target_policy

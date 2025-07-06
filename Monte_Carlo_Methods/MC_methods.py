@@ -324,7 +324,7 @@ def mc_control_off_policy_every_visit(states:list,
         G = 0
         W = 1
         for t in reversed(range(len(episode))):
-            action, state, reward = episode[t]
+            state, action, reward = episode[t]
             # Update all values
             G = gamma * G + reward
             C[state][action] = C[state][action] + W

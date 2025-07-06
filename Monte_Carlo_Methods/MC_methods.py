@@ -25,9 +25,7 @@ def first_visit_mc_policy_evaluation(states: list,
     V = {s: 0.0 for s in states}
 
     # Initialize a count for each state s
-    N = {}
-    for s in states:
-        N[s] = 0
+    Returns = defaultdict(list)
 
     for episode_idx in range(num_episodes):
         # Generate an episoed: a list of (state, action, reward)
@@ -43,8 +41,9 @@ def first_visit_mc_policy_evaluation(states: list,
             G = gamma * G + reward # accumulate discounted return
 
             if state not in visited_states:
-                N[state] = N[state] + 1
-                V[state] = V[state] + (G - V[state]) / N[state]
+                visited_states.add(state)
+                Returns[state].append(G)
+                V[state] = np.mean(Returns[state])
     
     return V
 

@@ -60,7 +60,8 @@ def td_sarsa_control(non_terminal_states: list,
                     gamma: float = 1.0,
                     alpha: float = 0.1,
                     epsilon: float = None,
-                    num_episodes: int = 10000):
+                    num_episodes: int = 10000,
+                    initial_Q: dict = None):
     """
     Algorithm to obtain an optimal policy and Q-value function, using on-policy TD(0) control.
     To keep exploration and exploitation we will make te policy epsilon-greedy during the train. And the default value is 1/t.
@@ -75,19 +76,25 @@ def td_sarsa_control(non_terminal_states: list,
         alpha (float): Step size between (0, 1].
         epsilon (float): Probability of not taking the greedy action at once.
         num_episodes (int): Number of episodes used to train the model.
+        initial_Q (dict): If it is None the values of the function are given randomly between 0 and 1. If not, it is a dictionary of dictionaries (state -> dict(actions) -> value)
     Returns:
         Q (dict(dict)): Optimal state-action pair value function. 
             It is a dictionary of dictionaries, each key representing a state (non-terminal) and each next key representing an action with their value associated.
         policy (dict): Optimal policy. Greedy with respect to Q. It gives the optimal action given the state.
     """
     # Initialize Q (state-action value function)
-    Q = {}
-    for s in non_terminal_states:
-        Q[s] = {}
-        for a in actions[s]:
-            Q[s][a] = np.random.random()
-    for s in terminal_states:
-        Q[s] = 0
+    if initial_Q is None:
+        Q = {}
+        for s in non_terminal_states:
+            Q[s] = {}
+            for a in actions[s]:
+                Q[s][a] = np.random.random()
+        for s in terminal_states:
+            Q[s] = {}
+            for a in actions[s]:
+                Q[s][a] = 0
+    else:
+        Q = initial_Q
     # Initilize the policy. Greedy with respect Q
     policy = {}
     for s in non_terminal_states:
@@ -96,15 +103,18 @@ def td_sarsa_control(non_terminal_states: list,
         best_action_idx = np.random.randint(0, len(best_actions))
         policy[s] = best_actions[best_action_idx]
     # Loop for each episode
-    for _ in range(num_episodes):
+    for idx in range(num_episodes):
+        print(idx)
         # Select an initial state to begin the episode
-        state = np.random.choice(initial_states)
+        inital_state_random_idx = np.random.randint(0, len(initial_states))
+        state = initial_states[inital_state_random_idx]
         # Choose the action from the initial state following the policy (it must be epsilon-greedy).
         if epsilon == None:
             epsilon_was_none = True
             # The first action is completly random because the epsilon would be 1/t with t = 1.
             action = np.random.choice(actions[state])
         else:
+            epsilon_was_none = False
             # If the greedy action is selected
             if np.random.random() > epsilon:
                 action = policy[state]
@@ -127,10 +137,10 @@ def td_sarsa_control(non_terminal_states: list,
                 idx = np.random.randint(0, len(actions[next_state]))
                 next_action = actions[next_state][idx]
             # Update Q
-            Q[state][action] = Q[state][action] + alpha * (reward + gamma * Q[next_state, next_action] - Q[state, action])
+            Q[state][action] = Q[state][action] + alpha * (reward + gamma * Q[next_state][next_action] - Q[state][action])
             # Update the policy with greediness respect to Q
             max_Q = max(Q[state].values())
-            best_actions = [a for a, q in Q[s].items() if q == max_Q]
+            best_actions = [a for a, q in Q[state].items() if q == max_Q]
             best_action_idx = np.random.randint(0, len(best_actions))
             policy[state] = best_actions[best_action_idx]
             # Update state and action

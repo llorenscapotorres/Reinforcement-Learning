@@ -103,8 +103,7 @@ def td_sarsa_control(non_terminal_states: list,
         best_action_idx = np.random.randint(0, len(best_actions))
         policy[s] = best_actions[best_action_idx]
     # Loop for each episode
-    for idx in range(num_episodes):
-        print(idx)
+    for i in range(num_episodes):
         # Select an initial state to begin the episode
         inital_state_random_idx = np.random.randint(0, len(initial_states))
         state = initial_states[inital_state_random_idx]
@@ -112,7 +111,8 @@ def td_sarsa_control(non_terminal_states: list,
         if epsilon == None:
             epsilon_was_none = True
             # The first action is completly random because the epsilon would be 1/t with t = 1.
-            action = np.random.choice(actions[state])
+            idx = np.random.randint(0, len(actions[state]))
+            action = actions[state][idx]
         else:
             epsilon_was_none = False
             # If the greedy action is selected
@@ -121,7 +121,7 @@ def td_sarsa_control(non_terminal_states: list,
             # If the greedy action is not selected
             else:
                 idx = np.random.randint(0, len(actions[state]))
-                intial_action = actions[state][idx]
+                action = actions[state][idx]
         # Loop until the episode is finished
         t = 1
         while True:

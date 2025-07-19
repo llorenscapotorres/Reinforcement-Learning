@@ -1,4 +1,5 @@
 import numpy as np
+from typing import Callable, Tuple, Any
 
 def td_policy_evaluation_one_step(non_terminal_states: list,
                                   terminal_states: list,
@@ -56,7 +57,7 @@ def td_sarsa_control(non_terminal_states: list,
                     terminal_states: list,
                     initial_states: list,
                     actions: dict,
-                    next_step_fn,
+                    next_step_fn: Callable[[Any, Any], Tuple[Any, float]],
                     gamma: float = 1.0,
                     alpha: float = 0.1,
                     epsilon: float = None,

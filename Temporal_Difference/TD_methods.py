@@ -199,7 +199,7 @@ def q_learning_control(non_terminal_states: list,
     for _ in range(num_episodes):
         # Select a random intial state
         idx_random_initial_state = np.random.randint(0, len(initial_states))
-        state = terminal_states[idx_random_initial_state]
+        state = initial_states[idx_random_initial_state]
         # Loop for each step of episode until the episode is finished
         t = 0
         while True:
@@ -242,12 +242,12 @@ def take_action(state: Any,
     Args:
         state: Given state where the agent will take action.
         Q: The Q value function that the agent will use to take action. It is a dictionary of dictionaries.
-        epsilon_greedy: A bool that indicates if the action will be epsilon greedy or not.
+        epsilon_greedy: A bool that indicates if the action will be epsilon greedy or not. If not is because it is greedy.
         epsilon: The epsilon value if the action is epsilon greedy.
     Returns:
         The action following the state and the "argmax Q policy".
     """
-    actions = Q[state].keys()
+    actions = list(Q[state].keys())
     if epsilon_greedy:
         if np.random.random() > epsilon:
             q_max = max(Q[state].values())
@@ -258,8 +258,10 @@ def take_action(state: Any,
             idx = np.random.randint(0, len(actions))
             return actions[idx]
     else:
-        idx = np.random.randint(0, len(actions))
-        return actions[idx]
+        q_max = max(Q[state].values())
+        best_actions = [a for a, q in Q[state].items() if q == q_max]
+        idx = np.random.randint(0, len(best_actions))
+        return best_actions[idx]
     
 def obtain_policy(Q: dict,
                   states: list):

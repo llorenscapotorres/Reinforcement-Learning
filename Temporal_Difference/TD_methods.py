@@ -229,7 +229,70 @@ def q_learning_control(non_terminal_states: list,
     policy = obtain_policy(Q=Q,
                            states=non_terminal_states)
     return Q, policy
-             
+
+def double_q_learning_control(non_terminal_states: list,
+                                terminal_states: list,
+                                initial_states: list,
+                                actions: dict,
+                                next_step_fn: Callable[[Any, Any], Tuple[Any, float]],
+                                gamma: float = 1.0,
+                                alpha: float = 0.1,
+                                epsilon: float = None,
+                                num_episodes: int = 10000,
+                                initial_Q1: dict = None,
+                                initial_Q2: dict = None):
+    """
+    Algorithm to obtain an optimal policy and Q-value function, using off-policy TD(0) Double Q-learning control.
+    To keep exploration and exploitation we will make te policy epsilon-greedy during the train. And the default value of epsilon is 1/t.
+        Moreover, the behavior policy will follow the value function Q1 + Q2.
+
+    Args:
+        non_terminal_states (list): A list of all possible non terminal states.
+        terminal_states (list): A list of all possible terminal states.
+        initial_states (list): A list of all possible initial states.
+        actions (dict): A dictionary where each key represents a state and the value is a list of the possible actions that agent can take.
+        next_step_fn (function): Takes as input a state and an action, and returns a (state, reward) tuple that follows the state-action pair.
+        gamma (float): Discount reward's factor.
+        alpha (float): Step size between (0, 1].
+        epsilon (float): Probability of not taking the greedy action at once.
+        num_episodes (int): Number of episodes used to train the model.
+        initial_Q1 (dict): If it is None the values of the function are given randomly between 0 and 1. If not, it is a dictionary of dictionaries (state -> dict(actions) -> value).
+        initial_Q2 (dict): If it is None the values of the function are given randomly between 0 and 1. If not, it is a dictionary of dictionaries (state -> dict(actions) -> value).
+    
+    Returns:
+        Q (dict(dict)): Optimal state-action pair value function. 
+            It is a dictionary of dictionaries, each key representing a state (non-terminal) and each next key representing an action with their value associated.
+        policy (dict): Optimal policy. Greedy with respect to Q. It gives the optimal action given the state.
+    """
+    # Initialize the first value function, Q_1
+    Q1 = initial_Q1
+    if initial_Q1 == None:
+        Q1 = _initialize_Q(non_terminal_states=non_terminal_states,
+                          terminal_states=terminal_states,
+                          actions=actions)
+    # Initialize the second value function, Q_2
+    Q2 = initial_Q2
+    if initial_Q2 == None:
+        Q2 = _initialize_Q(non_terminal_states=non_terminal_states,
+                          terminal_states=terminal_states,
+                          actions=actions)
+    # Loop for each episode
+    for _ in range(num_episodes):
+        pass
+
+def _initialize_Q(non_terminal_states: list,
+                  terminal_states: list,
+                  actions: dict):
+    """
+    Function that initialize a Q state-action value function with all their values between [0, 1.0). 
+    """
+    Q = {}
+    for state_list, value_fn in [(non_terminal_states, lambda: np.random.random()),
+                                    (terminal_states, lambda: 0)]:
+        for state in state_list:
+            Q[state] = {action: value_fn() for action in actions[state]}
+    return Q
+
 
 def take_action(state: Any,
                 Q: dict,

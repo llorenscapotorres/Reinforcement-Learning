@@ -276,9 +276,58 @@ def double_q_learning_control(non_terminal_states: list,
         Q2 = _initialize_Q(non_terminal_states=non_terminal_states,
                           terminal_states=terminal_states,
                           actions=actions)
+    # Initialize the value function Q1 + Q2
+    Q_sum = {
+        state: {
+            action: Q1[state][action] + Q2[state][action]
+            for action in Q1[state]
+        }
+        for state in Q1
+    }
     # Loop for each episode
-    for _ in range(num_episodes):
-        pass
+    for ep in range(num_episodes):
+        t = 0
+        # Initialize the first state
+        idx_initial_state = np.random.randint(len(initial_states))
+        state = initial_states[idx_initial_state]
+        # Loop for each step of episode until it is terminal
+        while state not in terminal_states:
+            t += 1
+            # Choose A from S using the policy epsilon-greedy in Q1 + Q2
+            if epsilon != None:
+                action = take_action(state=state,
+                                     Q=Q_sum,
+                                     epsilon_greedy=True,
+                                     epsilon=epsilon)
+            else:
+                action = take_action(state=state,
+                                     Q=Q_sum,
+                                     epsilon_greedy=True,
+                                     epsilon=1/t)
+            # Observe the reward and the next state
+            next_state, reward = next_step_fn(state, action)
+            # With probability 0.5 update Q1 otherwise Q2
+            if np.random.random() > 0.5:
+                q1 = Q1[state][action]
+                Q1[state][action] = Q1[state][action] + alpha * (reward + gamma * Q2[next_state][take_action(state=next_state,
+                                                                                                             Q=Q1,
+                                                                                                             epsilon_greedy=False)] - Q1[state][action])
+                # Update Q1 + Q2 (Q_sum)
+                Q_sum[state][action] += Q1[state][action] - q1
+            else:
+                q2 = Q2[state][action]
+                Q2[state][action] = Q2[state][action] + alpha * (reward + gamma * Q1[next_state][take_action(state=next_state,
+                                                                                                             Q=Q2,
+                                                                                                             epsilon_greedy=False)] - Q2[state][action])
+                # Update Q1 + Q2 (Q_sum)
+                Q_sum[state][action] += Q2[state][action] - q2
+            # Update the state
+            state = next_state
+    # Compute the policy
+    policy = obtain_policy(Q=Q_sum,
+                           states=non_terminal_states)
+    # Return the policy argmaximizing Q1 + Q2, and the value function
+    return policy, Q_sum
 
 def _initialize_Q(non_terminal_states: list,
                   terminal_states: list,

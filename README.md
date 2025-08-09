@@ -1,6 +1,6 @@
 # Reinforcement Learning Algorithms
 
-This repository will contain a collection of implementations of core reinforcement learning algorithms. The goal is to build a comprehensive and educational resource that closely follows fundamental principles of RL, with a focus on clarity and correctness.
+This repository contain a collection of implementations of core reinforcement learning algorithms. The goal is to build a comprehensive and educational resource that closely follows fundamental principles of RL, with a focus on clarity and correctness.
 
 ## 📌 Project Goals
 

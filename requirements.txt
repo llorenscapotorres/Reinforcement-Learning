@@ -3,4 +3,5 @@ pandas
 matplotlib
 streamlit
 scipy
+gymnasium[classic-control]
 gym
